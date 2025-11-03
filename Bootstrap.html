@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>1A2B 猜數字</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cute+Font&family=Noto+Sans+TC:wght@400;700&family=DynaPuff:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background: linear-gradient(135deg, #6fcde0, #e6f1ff);
+        font-family: "Cute Font", "DynaPuff", "Noto Sans TC", cursive;
+        min-height: 100vh;
+        color: #444;
+      }
+
+      .title {
+        text-align: center;
+        margin-top: 25px;
+        margin-bottom: 20px;
+        font-size: 3rem;
+        color: #966de7;
+        text-shadow: 2px 2px #fff;
+      }
+
+      .game-container {
+        max-width: 500px;
+        margin: auto;
+        background-color: #ffffffcc;
+        border-radius: 20px;
+        box-shadow: 0 0 10px #ffd0e1;
+        padding: 20px;
+      }
+
+      #userInput {
+        text-align: center;
+        font-size: 2rem;
+        letter-spacing: 10px;
+        border: 2px dashed #ffa8d9;
+        border-radius: 10px;
+        background-color: #fff8fb;
+        color: #24d0bc;
+      }
+
+      .btn {
+        font-size: 1.2rem;
+        border-radius: 12px;
+      }
+
+      /* 九宮格鍵盤 */
+      .keypad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .num-btn {
+        background-color: #fff2fa;
+        border: 2px solid #92a9ce;
+        border-radius: 15px;
+        font-size: 2rem;
+        color: #439ce5;
+        padding: 15px;
+        transition: 0.15s;
+        box-shadow: 0 2px 3px rgba(50, 134, 212, 0.3);
+      }
+
+      .num-btn:hover {
+        background-color: #ffe6f4;
+        transform: scale(1.05);
+      }
+
+      .num-btn:active {
+        transform: scale(0.9);
+      }
+
+      .record {
+        border-bottom: 1px dotted #ffb3d9;
+        padding: 5px;
+        color: #db90b5;
+        font-size: 1.4rem;
+      }
+
+      .card-header {
+        font-size: 1.4rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container py-3">
+      <h1 class="title">1A2B 猜數字</h1>
+
+      <div class="text-center mb-3">
+        <button id="startBtn" class="btn btn-success me-2">開始</button>
+        <button id="resetBtn" class="btn btn-danger me-2">重來</button>
+        <button id="showBtn" class="btn btn-warning">👀 偷看</button>
+      </div>
+
+      <div class="game-container">
+        <div class="text-center mb-3">
+          <label class="form-label fs-4 text-secondary">輸入四位不重複數字：</label>
+          <input
+            id="userInput"
+            type="text"
+            maxlength="4"
+            class="form-control mb-3"
+            placeholder="----"
+            readonly
+          />
+          <button id="guessBtn" class="btn btn-primary w-100"> 猜！</button>
+        </div>
+
+        <!-- 九宮格鍵盤 -->
+        <div class="card shadow-sm mb-4 border-0">
+          <div class="card-header bg-pink text-white text-center bg-gradient" style="background-color:#f5aacf">
+            九宮格鍵盤
+          </div>
+          <div class="card-body">
+            <div class="keypad">
+              <button class="num-btn" data-num="1">1</button>
+              <button class="num-btn" data-num="2">2</button>
+              <button class="num-btn" data-num="3">3</button>
+              <button class="num-btn" data-num="4">4</button>
+              <button class="num-btn" data-num="5">5</button>
+              <button class="num-btn" data-num="6">6</button>
+              <button class="num-btn" data-num="7">7</button>
+              <button class="num-btn" data-num="8">8</button>
+              <button class="num-btn" data-num="9">9</button>
+              <button class="num-btn btn-outline-danger" data-action="clear">
+                清空
+              </button>
+              <button class="num-btn" data-num="0">0</button>
+              <button
+                class="num-btn btn-outline-secondary"
+                data-action="delete"
+              >
+                刪除
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 猜測紀錄 -->
+        <div class="card shadow-sm border-0">
+          <div class="card-header text-white text-center bg-gradient" style="background-color:#48deca">
+            猜測紀錄
+          </div>
+          <div id="historyPanel" class="card-body bg-light rounded-bottom"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let answer = "";
+      let gameStarted = false;
+      const input = document.getElementById("userInput");
+      const historyPanel = document.getElementById("historyPanel");
+
+      function generateAnswer() {
+        const arr = [];
+        while (arr.length < 4) {
+          const n = Math.floor(Math.random() * 10);
+          if (!arr.includes(n)) arr.push(n);
+        }
+        return arr.join("");
+      }
+
+      document.getElementById("startBtn").addEventListener("click", () => {
+        answer = generateAnswer();
+        gameStarted = true;
+        input.value = "";
+        historyPanel.innerHTML = "";
+        alert("遊戲開始囉！加油！");
+      });
+
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        gameStarted = false;
+        input.value = "";
+        historyPanel.innerHTML = "";
+      });
+
+      document.getElementById("showBtn").addEventListener("click", () => {
+        if (!gameStarted) return alert("請先開始遊戲喔！");
+        alert("答案是：" + answer);
+      });
+
+      document.getElementById("guessBtn").addEventListener("click", () => {
+        if (!gameStarted) return alert("請先開始遊戲喔！");
+        const guess = input.value;
+        if (guess.length !== 4) return alert("請輸入四位數字！");
+        if (new Set(guess).size !== 4) return alert("請勿輸入重複數字！");
+        let A = 0,
+          B = 0;
+        for (let i = 0; i < 4; i++) {
+          if (guess[i] === answer[i]) A++;
+          else if (answer.includes(guess[i])) B++;
+        }
+        const record = document.createElement("div");
+        record.classList.add("record");
+        record.textContent = `${guess} ➜ ${A}A${B}B`;
+        historyPanel.prepend(record);
+
+        if (A === 4) {
+          alert("太棒了！你答對啦～");
+          gameStarted = false;
+        }
+        input.value = "";
+      });
+
+      document.querySelectorAll(".num-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (!gameStarted) return alert("請先開始遊戲喔！");
+          const num = btn.dataset.num;
+          const act = btn.dataset.action;
+          if (num) {
+            if (input.value.length < 4 && !input.value.includes(num)) {
+              input.value += num;
+            }
+          } else if (act === "clear") {
+            input.value = "";
+          } else if (act === "delete") {
+            input.value = input.value.slice(0, -1);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
